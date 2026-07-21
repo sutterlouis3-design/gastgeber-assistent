@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gastgeber-Assistent</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --paper:#FAF7F2; --panel:#FFFFFF; --ink:#2B2A28; --ink-soft:#6B6862;
+    --forest:#2F4F42; --forest-dark:#1E3A30; --sand:#EFE3CE; --line:#E4DED2;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;display:flex;justify-content:center;padding:20px;}
+  .chat{width:100%;max-width:480px;height:calc(100vh - 40px);max-height:680px;background:var(--panel);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(43,42,40,.08);}
+  .head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;flex-shrink:0;}
+  .head .name{font-weight:600;font-size:15px;}
+  .head .status{font-size:12px;color:var(--forest);}
+  .head .status.offline{color:var(--ink-soft);}
+
+  .messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;background:var(--paper);}
+  .msg{max-width:80%;padding:10px 14px;border-radius:14px;font-size:14.5px;line-height:1.55;}
+  .msg.bot{background:var(--panel);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px;}
+  .msg.user{background:var(--sand);align-self:flex-end;border-bottom-right-radius:4px;}
+  .msg.typing{color:var(--ink-soft);font-style:italic;}
+  .msg.error{background:#FBE9E7;color:#8A3B2F;align-self:stretch;font-size:13px;}
+  .msg strong{font-weight:600;}
+
+  .input-row{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--line);background:var(--panel);}
+  .input-row input{flex:1;border:1px solid var(--line);border-radius:20px;padding:10px 16px;font-size:14px;font-family:'Inter',sans-serif;}
+  .input-row input:focus{outline:2px solid var(--forest);outline-offset:1px;}
+  .input-row button{border:none;background:var(--forest);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .input-row button:hover{background:var(--forest-dark);}
+  .input-row button:disabled{background:var(--line);cursor:default;}
+
+  .setup-hint{max-width:480px;margin:0 auto;padding:40px 20px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6;}
+  .setup-hint code{background:var(--sand);padding:2px 6px;border-radius:4px;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ── Konfiguration ──
+// Die Vercel-Function-URL. Falls deine Domain anders lautet, hier anpassen.
+const ENDPOINT = "https://gastgeber-assistent.vercel.app/api/chat";
+
+// Property-ID kommt aus der URL, z.B. gastgeber-assistent.vercel.app/chat.html?u=DEINE-ID
+const params = new URLSearchParams(window.location.search);
+const PROPERTY_ID = params.get('u');
+
+let history = [];
+let propertyName = "Unterkunft";
+
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+
+// Sehr einfache Markdown-Umwandlung: **fett** -> <strong>
+function renderMarkdown(text){
+  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderApp(){
+  if (!PROPERTY_ID) {
+    document.getElementById('app').innerHTML = `
+      <div class="setup-hint">
+        Kein Unterkunfts-Link angegeben.<br>
+        Diese Seite braucht einen Parameter in der URL, z. B.:<br>
+        <code>?u=deine-property-id</code>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('app').innerHTML = `
+    <div class="chat">
+      <div class="head">
+        <div class="avatar" id="avatar">?</div>
+        <div>
+          <div class="name" id="chatName">Lädt…</div>
+          <div class="status" id="chatStatus">● verbindet…</div>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="input-row">
+        <input id="userInput" type="text" placeholder="Frag etwas…" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>`;
+
+  loadPropertyName();
+}
+
+async function loadPropertyName(){
+  try {
+    const res = await fetch(`${ENDPOINT}?propertyId=${encodeURIComponent(PROPERTY_ID)}`);
+    const data = await res.json();
+    if (res.ok && data.name) {
+      propertyName = data.name;
+      document.getElementById('chatName').textContent = propertyName;
+      document.getElementById('chatStatus').textContent = '● antwortet automatisch';
+      document.getElementById('avatar').textContent = propertyName.charAt(0).toUpperCase();
+      addMessage(`Hallo! Ich bin der Assistent für "${propertyName}". Frag mich gern etwas zum Check-in, WLAN, Parken oder der Umgebung.`, 'bot');
+    } else {
+      document.getElementById('chatName').textContent = 'Unterkunft nicht gefunden';
+      document.getElementById('chatStatus').textContent = '';
+      document.getElementById('chatStatus').className = 'status offline';
+    }
+  } catch(err) {
+    document.getElementById('chatName').textContent = 'Verbindungsfehler';
+    document.getElementById('chatStatus').className = 'status offline';
+  }
+}
+
+function addMessage(text, cls){
+  const box = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  div.innerHTML = cls === 'bot' ? renderMarkdown(text) : escapeHtml(text);
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function sendMessage(){
+  const input = document.getElementById('userInput');
+  const btn = document.getElementById('sendBtn');
+  const text = input.value.trim();
+  if(!text) return;
+
+  addMessage(text, 'user');
+  history.push({role:'user', content: text});
+  input.value = '';
+  btn.disabled = true;
+  const typing = addMessage('tippt…', 'bot typing');
+
+  try {
+    const response = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ propertyId: PROPERTY_ID, messages: history })
+    });
+    const data = await response.json();
+    typing.remove();
+
+    const textBlock = data && data.content && data.content.find(b => b.type === 'text');
+    if (response.ok && textBlock) {
+      addMessage(textBlock.text, 'bot');
+      history.push({role:'assistant', content: textBlock.text});
+    } else {
+      addMessage('Entschuldigung, gerade gibt es ein technisches Problem. Bitte wende dich direkt an den Gastgeber.', 'error');
+    }
+  } catch(err){
+    typing.remove();
+    addMessage('Verbindungsfehler. Bitte wende dich direkt an den Gastgeber.', 'error');
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+renderApp();
+</script>
+</body>
+</html>
