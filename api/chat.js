@@ -5,7 +5,7 @@
 export default async function handler(req, res) {
   // CORS-Header: erlaubt Anfragen von jeder Seite (auch lokal geöffnete HTML-Dateien)
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Preflight-Anfrage des Browsers direkt beantworten
@@ -13,8 +13,28 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // GET: nur den Namen der Unterkunft zurückgeben (fürs Chat-Widget-Header),
+  // ohne die volle Wissensbasis an den Browser zu schicken
+  if (req.method === 'GET') {
+    const { propertyId } = req.query;
+    if (!propertyId) return res.status(400).json({ error: 'propertyId erforderlich' });
+
+    const supabaseRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/properties?id=eq.${propertyId}&select=name`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        },
+      }
+    );
+    const rows = await supabaseRes.json();
+    if (!rows[0]) return res.status(404).json({ error: 'Unterkunft nicht gefunden' });
+    return res.status(200).json({ name: rows[0].name });
+  }
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Nur POST erlaubt' });
+    return res.status(405).json({ error: 'Nur GET oder POST erlaubt' });
   }
 
   const { propertyId, messages } = req.body;
