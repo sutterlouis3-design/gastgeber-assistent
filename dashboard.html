@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gastgeber-Assistent — Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --paper:#FAF7F2; --panel:#FFFFFF; --ink:#2B2A28; --ink-soft:#6B6862;
+    --forest:#2F4F42; --forest-dark:#1E3A30; --sand:#EFE3CE; --sand-dark:#C9AE7E;
+    --line:#E4DED2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;padding:32px 16px;}
+  .wrap{max-width:760px;margin:0 auto;}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:26px;margin:0 0 6px;}
+  .sub{color:var(--ink-soft);font-size:14px;margin:0 0 28px;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px;}
+  .card h2{font-family:'Fraunces',serif;font-size:17px;margin:0 0 4px;}
+  .card .hint{font-size:13px;color:var(--ink-soft);margin:0 0 14px;}
+
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:12px 0 4px;}
+  input[type=text], input[type=email], textarea{
+    width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 12px;
+    font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:#FDFCFA;
+  }
+  textarea{min-height:160px;resize:vertical;line-height:1.6;}
+  input:focus, textarea:focus{outline:2px solid var(--forest);outline-offset:1px;}
+
+  .btn{border:none;background:var(--forest);color:#fff;padding:10px 18px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:12px;}
+  .btn:hover{background:var(--forest-dark);}
+  .btn.secondary{background:none;border:1px solid var(--line);color:var(--ink);}
+  .btn.secondary:hover{background:#F2F2F0;}
+  .btn:disabled{opacity:.5;cursor:default;}
+
+  .msg{font-size:13px;margin-top:10px;padding:8px 12px;border-radius:8px;}
+  .msg.ok{background:#EAF3EE;color:var(--forest-dark);}
+  .msg.err{background:#FBE9E7;color:#8A3B2F;}
+
+  .property{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;}
+  .property .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .property .top .name{font-weight:600;font-size:15px;}
+  .link-box{display:flex;gap:8px;align-items:center;background:var(--sand);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:12.5px;word-break:break-all;}
+  .link-box button{flex-shrink:0;border:none;background:var(--forest);color:#fff;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .topbar .email{font-size:13px;color:var(--ink-soft);}
+  .logout{background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">Lädt…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── Konfiguration ──
+const SUPABASE_URL = "https://lgvbejwvgkppbxoubuoh.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YwaBftrJDkVKem7RrOUEVw_SHwONvDC";
+const WIDGET_BASE_URL = "https://gastgeber-assistent.vercel.app/chat-widget.html";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+let currentUser = null;
+let properties = [];
+
+async function init(){
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadProperties();
+    renderDashboard();
+  } else {
+    renderLogin();
+  }
+}
+
+// ── Login-Ansicht ──
+function renderLogin(){
+  document.getElementById('app').innerHTML = `
+    <h1>Gastgeber-Assistent</h1>
+    <p class="sub">Melde dich an, um deine Unterkünfte zu verwalten.</p>
+    <div class="card">
+      <h2>Anmelden</h2>
+      <p class="hint">Du bekommst einen Login-Link per E-Mail zugeschickt — kein Passwort nötig.</p>
+      <label>E-Mail-Adresse</label>
+      <input type="email" id="loginEmail" placeholder="du@beispiel.de">
+      <br><button class="btn" onclick="sendMagicLink()">Login-Link senden</button>
+      <div id="loginMsg"></div>
+    </div>
+  `;
+}
+
+async function sendMagicLink(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const msgBox = document.getElementById('loginMsg');
+  if (!email) return;
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg err">Fehler: ${error.message}</div>`;
+  } else {
+    msgBox.innerHTML = `<div class="msg ok">Login-Link verschickt! Schau in dein E-Mail-Postfach (auch Spam-Ordner prüfen) und klick auf den Link.</div>`;
+  }
+}
+
+// ── Dashboard-Ansicht ──
+async function loadProperties(){
+  const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+  properties = data || [];
+}
+
+function renderDashboard(){
+  document.getElementById('app').innerHTML = `
+    <div class="topbar">
+      <div>
+        <h1>Deine Unterkünfte</h1>
+        <p class="sub" style="margin:0;">${properties.length} Unterkunft(en) angelegt</p>
+      </div>
+      <div>
+        <div class="email">${currentUser.email}</div>
+        <button class="logout" onclick="logout()">Abmelden</button>
+      </div>
+    </div>
+
+    <div id="propertyList"></div>
+
+    <div class="card">
+      <h2>Neue Unterkunft hinzufügen</h2>
+      <p class="hint">Trag hier alle Infos ein, die der Assistent Gästen später mitteilen soll.</p>
+      <label>Name der Unterkunft</label>
+      <input type="text" id="newName" placeholder='z. B. "Loft am Augustinerplatz"'>
+      <label>Wissensbasis (Check-in, WLAN, Regeln, Umgebung…)</label>
+      <textarea id="newKb" placeholder="Check-in ab 15 Uhr per Schlüsselbox...&#10;WLAN: Netzwerk XY, Passwort ...&#10;Parken: ..."></textarea>
+      <button class="btn" onclick="addProperty()">Unterkunft speichern</button>
+      <div id="addMsg"></div>
+    </div>
+  `;
+  renderPropertyList();
+}
+
+function renderPropertyList(){
+  const box = document.getElementById('propertyList');
+  if (properties.length === 0) {
+    box.innerHTML = `<div class="card"><p class="hint" style="margin:0;">Noch keine Unterkunft angelegt — füg unten deine erste hinzu.</p></div>`;
+    return;
+  }
+  box.innerHTML = properties.map(p => {
+    const link = `${WIDGET_BASE_URL}?u=${p.id}`;
+    return `
+      <div class="property">
+        <div class="top">
+          <div class="name">${escapeHtml(p.name)}</div>
+        </div>
+        <label>Wissensbasis bearbeiten</label>
+        <textarea id="kb-${p.id}">${escapeHtml(p.knowledge_base || '')}</textarea>
+        <button class="btn secondary" onclick="updateProperty('${p.id}')">Änderungen speichern</button>
+        <div id="editMsg-${p.id}"></div>
+        <div class="link-box">
+          <span>${link}</span>
+          <button onclick="copyLink('${link}', this)">Kopieren</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function addProperty(){
+  const name = document.getElementById('newName').value.trim();
+  const kb = document.getElementById('newKb').value.trim();
+  const msgBox = document.getElementById('addMsg');
+  if (!name) { msgBox.innerHTML = `<div class="msg err">Bitte einen Namen eintragen.</div>`; return; }
+
+  const { error } = await supabase.from('properties').insert({
+    name, knowledge_base: kb, owner_id: currentUser.id
+  });
+
+  if (error) {
+    msgBox.innerHTML = `<div class="msg err">Fehler: ${error.message}</div>`;
+  } else {
+    await loadProperties();
+    renderDashboard();
+  }
+}
+
+async function updateProperty(id){
+  const kb = document.getElementById(`kb-${id}`).value;
+  const msgBox = document.getElementById(`editMsg-${id}`);
+  const { error } = await supabase.from('properties').update({ knowledge_base: kb }).eq('id', id);
+  if (error) {
+    msgBox.innerHTML = `<div class="msg err">Fehler: ${error.message}</div>`;
+  } else {
+    msgBox.innerHTML = `<div class="msg ok">Gespeichert ✓</div>`;
+    setTimeout(() => { msgBox.innerHTML = ''; }, 2000);
+  }
+}
+
+function copyLink(link, btn){
+  navigator.clipboard.writeText(link);
+  const original = btn.textContent;
+  btn.textContent = 'Kopiert ✓';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+async function logout(){
+  await supabase.auth.signOut();
+  renderLogin();
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+
+init();
+</script>
+</body>
+</html>
