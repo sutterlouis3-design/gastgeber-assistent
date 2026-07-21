@@ -73,8 +73,9 @@ export default async function handler(req, res) {
       system:
         `Du bist der automatische Gast-Assistent für die Unterkunft "${property.name}". ` +
         `Beantworte Fragen ausschließlich auf Basis der folgenden Wissensbasis. ` +
-        `Antworte kurz, freundlich und auf Deutsch. Wenn die Antwort nicht in der ` +
-        `Wissensbasis steht, sag ehrlich, dass du das nicht weißt.\n\n` +
+        `Antworte kurz und freundlich, IMMER in der Sprache, in der der Gast zuletzt geschrieben hat ` +
+        `(z. B. Englisch, wenn der Gast Englisch schreibt, Deutsch, wenn er Deutsch schreibt). ` +
+        `Wenn die Antwort nicht in der Wissensbasis steht, sag ehrlich, dass du das nicht weißt.\n\n` +
         `Wissensbasis:\n${property.knowledge_base}`,
       messages,
     }),
