@@ -3,6 +3,16 @@
 // das Frontend ruft nur diese Funktion auf, nie direkt die Anthropic API.
 
 export default async function handler(req, res) {
+  // CORS-Header: erlaubt Anfragen von jeder Seite (auch lokal geöffnete HTML-Dateien)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Preflight-Anfrage des Browsers direkt beantworten
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Nur POST erlaubt' });
   }
