@@ -61,7 +61,7 @@ function escapeHtml(s){
 
 // Sehr einfache Markdown-Umwandlung: **fett** -> <strong>
 function renderMarkdown(text){
-  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 }
 
 function renderApp(){
@@ -103,7 +103,7 @@ async function loadPropertyName(){
       document.getElementById('chatName').textContent = propertyName;
       document.getElementById('chatStatus').textContent = '● antwortet automatisch';
       document.getElementById('avatar').textContent = propertyName.charAt(0).toUpperCase();
-      addMessage(`Hallo! Ich bin der Assistent für "${propertyName}". Frag mich gern etwas zum Check-in, WLAN, Parken oder der Umgebung.`, 'bot');
+      addMessage(`Hallo! Ich bin der Assistent für "${propertyName}". Frag mich gern etwas zum Check-in, WLAN, Parken oder der Umgebung.\n\nHi! I'm the assistant for "${propertyName}". Feel free to ask about check-in, WiFi, parking, or the area.`, 'bot');
     } else {
       document.getElementById('chatName').textContent = 'Unterkunft nicht gefunden';
       document.getElementById('chatStatus').textContent = '';
