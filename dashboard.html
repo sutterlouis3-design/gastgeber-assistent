@@ -60,13 +60,13 @@ const SUPABASE_URL = "https://lgvbejwvgkppbxoubuoh.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YwaBftrJDkVKem7RrOUEVw_SHwONvDC";
 const WIDGET_BASE_URL = "https://gastgeber-assistent.vercel.app/chat-widget.html";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 let currentUser = null;
 let properties = [];
 
 async function init(){
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
     await loadProperties();
@@ -97,7 +97,7 @@ async function sendMagicLink(){
   const msgBox = document.getElementById('loginMsg');
   if (!email) return;
 
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await sb.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: window.location.href }
   });
@@ -111,7 +111,7 @@ async function sendMagicLink(){
 
 // ── Dashboard-Ansicht ──
 async function loadProperties(){
-  const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('properties').select('*').order('created_at', { ascending: false });
   properties = data || [];
 }
 
@@ -176,7 +176,7 @@ async function addProperty(){
   const msgBox = document.getElementById('addMsg');
   if (!name) { msgBox.innerHTML = `<div class="msg err">Bitte einen Namen eintragen.</div>`; return; }
 
-  const { error } = await supabase.from('properties').insert({
+  const { error } = await sb.from('properties').insert({
     name, knowledge_base: kb, owner_id: currentUser.id
   });
 
@@ -191,7 +191,7 @@ async function addProperty(){
 async function updateProperty(id){
   const kb = document.getElementById(`kb-${id}`).value;
   const msgBox = document.getElementById(`editMsg-${id}`);
-  const { error } = await supabase.from('properties').update({ knowledge_base: kb }).eq('id', id);
+  const { error } = await sb.from('properties').update({ knowledge_base: kb }).eq('id', id);
   if (error) {
     msgBox.innerHTML = `<div class="msg err">Fehler: ${error.message}</div>`;
   } else {
@@ -208,7 +208,7 @@ function copyLink(link, btn){
 }
 
 async function logout(){
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   renderLogin();
 }
 
