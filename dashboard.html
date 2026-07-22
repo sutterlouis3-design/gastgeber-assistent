@@ -60,7 +60,9 @@ const SUPABASE_URL = "https://lgvbejwvgkppbxoubuoh.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YwaBftrJDkVKem7RrOUEVw_SHwONvDC";
 const WIDGET_BASE_URL = "https://gastgeber-assistent.vercel.app/chat-widget.html";
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true }
+});
 
 let currentUser = null;
 let properties = [];
@@ -74,6 +76,19 @@ async function init(){
   } else {
     renderLogin();
   }
+
+  // Falls der Magic-Link-Login etwas verzögert verarbeitet wird (z.B. auf Mobilgeräten),
+  // reagiert die Seite trotzdem, sobald die Session tatsächlich aktiv wird.
+  sb.auth.onAuthStateChange(async (event, newSession) => {
+    if (event === 'SIGNED_IN' && newSession) {
+      currentUser = newSession.user;
+      await loadProperties();
+      renderDashboard();
+    }
+    if (event === 'SIGNED_OUT') {
+      renderLogin();
+    }
+  });
 }
 
 // ── Login-Ansicht ──
