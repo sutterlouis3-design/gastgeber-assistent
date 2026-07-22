@@ -118,7 +118,9 @@ async function sendMagicLink(){
   });
 
   if (error) {
-    msgBox.innerHTML = `<div class="msg err">Fehler: ${error.message}</div>`;
+    console.error('Login-Fehler (Details):', error);
+    const details = error.message || error.error_description || error.msg || JSON.stringify(error);
+    msgBox.innerHTML = `<div class="msg err">Fehler: ${details} (Status: ${error.status || 'unbekannt'})</div>`;
   } else {
     msgBox.innerHTML = `<div class="msg ok">Login-Link verschickt! Schau in dein E-Mail-Postfach (auch Spam-Ordner prüfen) und klick auf den Link.</div>`;
   }
