@@ -149,11 +149,31 @@ function renderDashboard(){
 
     <div class="card">
       <h2>Neue Unterkunft hinzufügen</h2>
-      <p class="hint">Trag hier alle Infos ein, die der Assistent Gästen später mitteilen soll.</p>
+      <p class="hint">Beantworte die Fragen unten einfach direkt hinter dem Doppelpunkt — Zeilen, die nicht zutreffen, kannst du löschen.</p>
       <label>Name der Unterkunft</label>
       <input type="text" id="newName" placeholder='z. B. "Loft am Augustinerplatz"'>
       <label>Wissensbasis (Check-in, WLAN, Regeln, Umgebung…)</label>
-      <textarea id="newKb" placeholder="Check-in ab 15 Uhr per Schlüsselbox...&#10;WLAN: Netzwerk XY, Passwort ...&#10;Parken: ..."></textarea>
+      <textarea id="newKb">Check-in ab wie viel Uhr, und wie kommt der Gast rein? (Schlüsselbox, persönliche Übergabe, Smart Lock...):
+
+Check-out bis wie viel Uhr, und was muss der Gast noch erledigen?:
+
+WLAN-Name und Passwort:
+
+Gibt es einen Parkplatz? Falls nein, wo in der Nähe kann man parken?:
+
+Sind Haustiere erlaubt?:
+
+Gibt es Ruhezeiten oder andere wichtige Hausregeln?:
+
+Wo ist der nächste Supermarkt / die nächste Bäckerei?:
+
+Gibt es Restaurant- oder Freizeit-Tipps in der Umgebung?:
+
+Wie ist die nächste Bus-/Bahn-Haltestelle zu erreichen?:
+
+Was sollen Gäste tun, wenn etwas nicht funktioniert oder sie eine dringende Frage haben?:
+
+Sonstige wichtige Hinweise:</textarea>
       <button class="btn" onclick="addProperty()">Unterkunft speichern</button>
       <div id="addMsg"></div>
     </div>
