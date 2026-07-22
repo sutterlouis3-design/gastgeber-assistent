@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gastgeber-Assistent — Der Chatbot für deine Gäste</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#FAF7F2; --panel:#FFFFFF; --ink:#2B2A28; --ink-soft:#6B6862;
+    --forest:#2F4F42; --forest-dark:#1E3A30; --sand:#EFE3CE; --sand-dark:#C9AE7E;
+    --line:#E4DED2;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Inter',sans-serif; color:var(--ink); background:var(--paper); line-height:1.6;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px;}
+  a{color:inherit;}
+
+  nav{display:flex; justify-content:space-between; align-items:center; padding:22px 0;}
+  nav .logo{font-family:'Fraunces',serif; font-weight:700; font-size:19px; color:var(--forest);}
+  nav .cta{background:var(--forest); color:#fff; padding:9px 18px; border-radius:8px; font-size:14px; font-weight:600; text-decoration:none;}
+
+  .hero{padding:70px 0 60px; display:grid; grid-template-columns:1.1fr 1fr; gap:48px; align-items:center;}
+  @media (max-width:760px){.hero{grid-template-columns:1fr;}}
+  .eyebrow{font-size:13px; letter-spacing:.07em; text-transform:uppercase; color:var(--forest); font-weight:600; margin-bottom:14px;}
+  h1{font-family:'Fraunces',serif; font-weight:700; font-size:42px; line-height:1.15; margin-bottom:18px;}
+  .hero p{color:var(--ink-soft); font-size:17px; max-width:440px; margin-bottom:26px;}
+  .btn-primary{display:inline-block; background:var(--forest); color:#fff; padding:13px 26px; border-radius:9px; font-weight:600; font-size:15px; text-decoration:none;}
+  .btn-primary:hover{background:var(--forest-dark);}
+
+  .demo-card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 12px 32px rgba(43,42,40,.06);}
+  .demo-msg{font-size:13.5px; padding:9px 13px; border-radius:12px; margin-bottom:10px; max-width:85%;}
+  .demo-msg.guest{background:var(--sand); margin-left:auto; border-bottom-right-radius:3px;}
+  .demo-msg.bot{background:var(--paper); border:1px solid var(--line); border-bottom-left-radius:3px;}
+
+  .strip{background:var(--forest); color:#fff; padding:16px 0; text-align:center; font-size:14.5px;}
+
+  section.features{padding:70px 0;}
+  .section-head{max-width:520px; margin-bottom:44px;}
+  .section-head .eyebrow{margin-bottom:10px;}
+  .section-head h2{font-family:'Fraunces',serif; font-weight:600; font-size:30px; line-height:1.25;}
+
+  .feature-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  @media (max-width:760px){.feature-grid{grid-template-columns:1fr;}}
+  .feature{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px;}
+  .feature .num{font-family:'Fraunces',serif; font-size:22px; color:var(--sand-dark); margin-bottom:10px;}
+  .feature h3{font-size:16px; font-weight:600; margin-bottom:8px;}
+  .feature p{font-size:14px; color:var(--ink-soft);}
+
+  section.steps{padding:60px 0; border-top:1px solid var(--line);}
+  .step-row{display:flex; gap:18px; padding:20px 0; border-bottom:1px solid var(--line);}
+  .step-row:last-child{border-bottom:none;}
+  .step-num{font-family:'Fraunces',serif; font-size:20px; color:var(--forest); flex-shrink:0; width:34px;}
+  .step-body h4{font-size:15.5px; font-weight:600; margin-bottom:4px;}
+  .step-body p{font-size:14px; color:var(--ink-soft);}
+
+  .pricing{padding:60px 0; text-align:center;}
+  .price-card{display:inline-block; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:34px 44px; margin-top:20px;}
+  .price-card .amount{font-family:'Fraunces',serif; font-size:40px; color:var(--forest);}
+  .price-card .per{color:var(--ink-soft); font-size:14px;}
+
+  footer{padding:36px 0; text-align:center; color:var(--ink-soft); font-size:13px; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="logo">Gastgeber-Assistent</div>
+    <a class="cta" href="/dashboard.html">Kostenlos testen</a>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Für Airbnb- & Ferienwohnungs-Vermieter</div>
+      <h1>Beantwortet Gästefragen, während du schläfst.</h1>
+      <p>Ein Chatbot, der Check-in, WLAN, Parken und Hausregeln automatisch erklärt — rund um die Uhr, ohne dass du selbst am Handy hängst.</p>
+      <a class="btn-primary" href="/dashboard.html">Unterkunft kostenlos einrichten →</a>
+    </div>
+    <div class="demo-card">
+      <div class="demo-msg guest">Hey, wie komme ich rein? Bin schon vor der Tür 🙂</div>
+      <div class="demo-msg bot">Kein Problem! Der Code für die Schlüsselbox steht direkt neben der Haustür — er wurde dir gestern per Nachricht geschickt.</div>
+      <div class="demo-msg guest">Und WLAN?</div>
+      <div class="demo-msg bot">Netzwerk "Wiehre_Gast", Passwort hängt auf der Karte im Flur neben der Kaffeemaschine.</div>
+    </div>
+  </div>
+</div>
+
+<div class="strip">Durchschnittlich 70–80% aller Gästenachrichten lassen sich automatisch beantworten.</div>
+
+<div class="wrap">
+  <section class="features">
+    <div class="section-head">
+      <div class="eyebrow">Warum</div>
+      <h2>Weniger Nachrichten für dich, schnellere Antworten für deine Gäste.</h2>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="num">01</div>
+        <h3>Immer erreichbar</h3>
+        <p>Auch um 23 Uhr oder am Wochenende — der Assistent antwortet sofort, ohne dass du dein Handy checken musst.</p>
+      </div>
+      <div class="feature">
+        <div class="num">02</div>
+        <h3>Nur deine Infos</h3>
+        <p>Der Bot antwortet ausschließlich auf Basis dessen, was du ihm über deine Unterkunft mitgibst — nichts wird erfunden.</p>
+      </div>
+      <div class="feature">
+        <div class="num">03</div>
+        <h3>Mehrere Unterkünfte</h3>
+        <p>Jede Wohnung bekommt ihre eigene Wissensbasis und ihren eigenen Link — beliebig erweiterbar.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps">
+    <div class="section-head">
+      <div class="eyebrow">So funktioniert's</div>
+      <h2>In drei Schritten eingerichtet.</h2>
+    </div>
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div class="step-body"><h4>Fragebogen ausfüllen</h4><p>Check-in-Ablauf, WLAN, Hausregeln, Umgebungstipps — einmalig, dauert etwa 15 Minuten.</p></div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div class="step-body"><h4>Link erhalten</h4><p>Du bekommst einen persönlichen Chat-Link für deine Unterkunft.</p></div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div class="step-body"><h4>In Airbnb-Nachricht einfügen</h4><p>Trag den Link einmal in deine automatisierte Check-in-Nachricht ein — ab dann läuft alles von selbst.</p></div>
+    </div>
+  </section>
+
+  <section class="pricing" id="kontakt">
+    <div class="eyebrow">Preis</div>
+    <div class="price-card">
+      <div class="amount">15 €</div>
+      <div class="per">pro Unterkunft / Monat</div>
+    </div>
+    <p style="margin-top:20px; color:var(--ink-soft); font-size:14px;">Erste Unterkunft 30 Tage kostenlos testen — keine Kreditkarte nötig.</p>
+  </section>
+</div>
+
+<footer>Gastgeber-Assistent · Ein Konzept-Projekt</footer>
+
+</body>
+</html>
