@@ -48,9 +48,17 @@
   .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
   .topbar .email{font-size:13px;color:var(--ink-soft);}
   .logout{background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;text-decoration:underline;}
+
+  .lang-switch{position:fixed;top:16px;right:16px;display:flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);}
+  .lang-switch button{border:none;background:none;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--ink-soft);}
+  .lang-switch button.active{background:var(--forest);color:#fff;font-weight:600;}
 </style>
 </head>
 <body>
+<div class="lang-switch">
+  <button id="langDe" onclick="setLang('de')">DE</button>
+  <button id="langEn" onclick="setLang('en')">EN</button>
+</div>
 <div class="wrap" id="app">Lädt…</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -66,94 +74,28 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, 
 
 let currentUser = null;
 let properties = [];
+let lang = (navigator.language || 'de').toLowerCase().startsWith('de') ? 'de' : 'en';
 
-async function init(){
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    await loadProperties();
-    renderDashboard();
-  } else {
-    renderLogin();
-  }
-
-  // Falls der Magic-Link-Login etwas verzögert verarbeitet wird (z.B. auf Mobilgeräten),
-  // reagiert die Seite trotzdem, sobald die Session tatsächlich aktiv wird.
-  sb.auth.onAuthStateChange(async (event, newSession) => {
-    if (event === 'SIGNED_IN' && newSession) {
-      currentUser = newSession.user;
-      await loadProperties();
-      renderDashboard();
-    }
-    if (event === 'SIGNED_OUT') {
-      renderLogin();
-    }
-  });
-}
-
-// ── Login-Ansicht ──
-function renderLogin(){
-  document.getElementById('app').innerHTML = `
-    <h1>Gastgeber-Assistent</h1>
-    <p class="sub">Melde dich an, um deine Unterkünfte zu verwalten.</p>
-    <div class="card">
-      <h2>Anmelden</h2>
-      <p class="hint">Du bekommst einen Login-Link per E-Mail zugeschickt — kein Passwort nötig.</p>
-      <label>E-Mail-Adresse</label>
-      <input type="email" id="loginEmail" placeholder="du@beispiel.de">
-      <br><button class="btn" onclick="sendMagicLink()">Login-Link senden</button>
-      <div id="loginMsg"></div>
-    </div>
-  `;
-}
-
-async function sendMagicLink(){
-  const email = document.getElementById('loginEmail').value.trim();
-  const msgBox = document.getElementById('loginMsg');
-  if (!email) return;
-
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href }
-  });
-
-  if (error) {
-    console.error('Login-Fehler (Details):', error);
-    const details = error.message || error.error_description || error.msg || JSON.stringify(error);
-    msgBox.innerHTML = `<div class="msg err">Fehler: ${details} (Status: ${error.status || 'unbekannt'})</div>`;
-  } else {
-    msgBox.innerHTML = `<div class="msg ok">Login-Link verschickt! Schau in dein E-Mail-Postfach (auch Spam-Ordner prüfen) und klick auf den Link.</div>`;
-  }
-}
-
-// ── Dashboard-Ansicht ──
-async function loadProperties(){
-  const { data, error } = await sb.from('properties').select('*').order('created_at', { ascending: false });
-  properties = data || [];
-}
-
-function renderDashboard(){
-  document.getElementById('app').innerHTML = `
-    <div class="topbar">
-      <div>
-        <h1>Deine Unterkünfte</h1>
-        <p class="sub" style="margin:0;">${properties.length} Unterkunft(en) angelegt</p>
-      </div>
-      <div>
-        <div class="email">${currentUser.email}</div>
-        <button class="logout" onclick="logout()">Abmelden</button>
-      </div>
-    </div>
-
-    <div id="propertyList"></div>
-
-    <div class="card">
-      <h2>Neue Unterkunft hinzufügen</h2>
-      <p class="hint">Beantworte die Fragen unten einfach direkt hinter dem Doppelpunkt — Zeilen, die nicht zutreffen, kannst du löschen.</p>
-      <label>Name der Unterkunft</label>
-      <input type="text" id="newName" placeholder='z. B. "Loft am Augustinerplatz"'>
-      <label>Wissensbasis (Check-in, WLAN, Regeln, Umgebung…)</label>
-      <textarea id="newKb">Check-in ab wie viel Uhr, und wie kommt der Gast rein? (Schlüsselbox, persönliche Übergabe, Smart Lock...):
+// ── Übersetzungen ──
+const T = {
+  de: {
+    title: "Gastgeber-Assistent",
+    loginSub: "Melde dich an, um deine Unterkünfte zu verwalten.",
+    loginHeading: "Anmelden",
+    loginHint: "Du bekommst einen Login-Link per E-Mail zugeschickt — kein Passwort nötig.",
+    emailLabel: "E-Mail-Adresse",
+    sendLink: "Login-Link senden",
+    linkSent: "Login-Link verschickt! Schau in dein E-Mail-Postfach (auch Spam-Ordner prüfen) und klick auf den Link.",
+    error: "Fehler",
+    yourProperties: "Deine Unterkünfte",
+    propertiesCount: (n) => `${n} Unterkunft(en) angelegt`,
+    logout: "Abmelden",
+    addNew: "Neue Unterkunft hinzufügen",
+    fillHint: "Beantworte die Fragen unten einfach direkt hinter dem Doppelpunkt — Zeilen, die nicht zutreffen, kannst du löschen.",
+    nameLabel: "Name der Unterkunft",
+    namePlaceholder: 'z. B. "Loft am Augustinerplatz"',
+    kbLabel: "Wissensbasis (Check-in, WLAN, Regeln, Umgebung…)",
+    kbTemplate: `Check-in ab wie viel Uhr, und wie kommt der Gast rein? (Schlüsselbox, persönliche Übergabe, Smart Lock...):
 
 Check-out bis wie viel Uhr, und was muss der Gast noch erledigen?:
 
@@ -173,8 +115,165 @@ Wie ist die nächste Bus-/Bahn-Haltestelle zu erreichen?:
 
 Was sollen Gäste tun, wenn etwas nicht funktioniert oder sie eine dringende Frage haben?:
 
-Sonstige wichtige Hinweise:</textarea>
-      <button class="btn" onclick="addProperty()">Unterkunft speichern</button>
+Sonstige wichtige Hinweise:`,
+    save: "Unterkunft speichern",
+    nameRequired: "Bitte einen Namen eintragen.",
+    noProperties: "Noch keine Unterkunft angelegt — füg unten deine erste hinzu.",
+    editKb: "Wissensbasis bearbeiten",
+    saveChanges: "Änderungen speichern",
+    saved: "Gespeichert ✓",
+    copy: "Kopieren",
+    copied: "Kopiert ✓",
+  },
+  en: {
+    title: "Host Assistant",
+    loginSub: "Sign in to manage your properties.",
+    loginHeading: "Sign in",
+    loginHint: "You'll get a login link by email — no password needed.",
+    emailLabel: "Email address",
+    sendLink: "Send login link",
+    linkSent: "Login link sent! Check your inbox (and spam folder) and click the link.",
+    error: "Error",
+    yourProperties: "Your properties",
+    propertiesCount: (n) => `${n} propert${n === 1 ? 'y' : 'ies'} added`,
+    logout: "Sign out",
+    addNew: "Add a new property",
+    fillHint: "Just answer the questions below right after the colon — delete any lines that don't apply.",
+    nameLabel: "Property name",
+    namePlaceholder: 'e.g. "Loft near the old town"',
+    kbLabel: "Knowledge base (check-in, WiFi, rules, area…)",
+    kbTemplate: `Check-in from what time, and how does the guest get in? (lockbox, in-person handover, smart lock...):
+
+Check-out by what time, and anything the guest needs to do before leaving?:
+
+WiFi name and password:
+
+Is there parking? If not, where nearby can guests park?:
+
+Are pets allowed?:
+
+Any quiet hours or other important house rules?:
+
+Where's the nearest supermarket / bakery?:
+
+Any restaurant or things-to-do recommendations nearby?:
+
+How to reach the nearest bus/train stop?:
+
+What should guests do if something's not working or they have an urgent question?:
+
+Any other important notes:`,
+    save: "Save property",
+    nameRequired: "Please enter a name.",
+    noProperties: "No property yet — add your first one below.",
+    editKb: "Edit knowledge base",
+    saveChanges: "Save changes",
+    saved: "Saved ✓",
+    copy: "Copy",
+    copied: "Copied ✓",
+  }
+};
+function t(){ return T[lang]; }
+
+function setLang(newLang){
+  lang = newLang;
+  document.getElementById('langDe').classList.toggle('active', lang === 'de');
+  document.getElementById('langEn').classList.toggle('active', lang === 'en');
+  if (currentUser) { renderDashboard(); } else { renderLogin(); }
+}
+
+async function init(){
+  document.getElementById('langDe').classList.toggle('active', lang === 'de');
+  document.getElementById('langEn').classList.toggle('active', lang === 'en');
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadProperties();
+    renderDashboard();
+  } else {
+    renderLogin();
+  }
+
+  sb.auth.onAuthStateChange(async (event, newSession) => {
+    if (event === 'SIGNED_IN' && newSession) {
+      currentUser = newSession.user;
+      await loadProperties();
+      renderDashboard();
+    }
+    if (event === 'SIGNED_OUT') {
+      renderLogin();
+    }
+  });
+}
+
+// ── Login-Ansicht ──
+function renderLogin(){
+  const s = t();
+  document.getElementById('app').innerHTML = `
+    <h1>${s.title}</h1>
+    <p class="sub">${s.loginSub}</p>
+    <div class="card">
+      <h2>${s.loginHeading}</h2>
+      <p class="hint">${s.loginHint}</p>
+      <label>${s.emailLabel}</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com">
+      <br><button class="btn" onclick="sendMagicLink()">${s.sendLink}</button>
+      <div id="loginMsg"></div>
+    </div>
+  `;
+}
+
+async function sendMagicLink(){
+  const s = t();
+  const email = document.getElementById('loginEmail').value.trim();
+  const msgBox = document.getElementById('loginMsg');
+  if (!email) return;
+
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+
+  if (error) {
+    console.error('Login error (details):', error);
+    const details = error.message || error.error_description || error.msg || JSON.stringify(error);
+    msgBox.innerHTML = `<div class="msg err">${s.error}: ${details} (Status: ${error.status || 'unknown'})</div>`;
+  } else {
+    msgBox.innerHTML = `<div class="msg ok">${s.linkSent}</div>`;
+  }
+}
+
+// ── Dashboard-Ansicht ──
+async function loadProperties(){
+  const { data, error } = await sb.from('properties').select('*').order('created_at', { ascending: false });
+  properties = data || [];
+}
+
+function renderDashboard(){
+  const s = t();
+  document.getElementById('app').innerHTML = `
+    <div class="topbar">
+      <div>
+        <h1>${s.yourProperties}</h1>
+        <p class="sub" style="margin:0;">${s.propertiesCount(properties.length)}</p>
+      </div>
+      <div>
+        <div class="email">${currentUser.email}</div>
+        <button class="logout" onclick="logout()">${s.logout}</button>
+      </div>
+    </div>
+
+    <div id="propertyList"></div>
+
+    <div class="card">
+      <h2>${s.addNew}</h2>
+      <p class="hint">${s.fillHint}</p>
+      <label>${s.nameLabel}</label>
+      <input type="text" id="newName" placeholder='${s.namePlaceholder}'>
+      <label>${s.kbLabel}</label>
+      <textarea id="newKb">${s.kbTemplate}</textarea>
+      <button class="btn" onclick="addProperty()">${s.save}</button>
       <div id="addMsg"></div>
     </div>
   `;
@@ -182,9 +281,10 @@ Sonstige wichtige Hinweise:</textarea>
 }
 
 function renderPropertyList(){
+  const s = t();
   const box = document.getElementById('propertyList');
   if (properties.length === 0) {
-    box.innerHTML = `<div class="card"><p class="hint" style="margin:0;">Noch keine Unterkunft angelegt — füg unten deine erste hinzu.</p></div>`;
+    box.innerHTML = `<div class="card"><p class="hint" style="margin:0;">${s.noProperties}</p></div>`;
     return;
   }
   box.innerHTML = properties.map(p => {
@@ -194,13 +294,13 @@ function renderPropertyList(){
         <div class="top">
           <div class="name">${escapeHtml(p.name)}</div>
         </div>
-        <label>Wissensbasis bearbeiten</label>
+        <label>${s.editKb}</label>
         <textarea id="kb-${p.id}">${escapeHtml(p.knowledge_base || '')}</textarea>
-        <button class="btn secondary" onclick="updateProperty('${p.id}')">Änderungen speichern</button>
+        <button class="btn secondary" onclick="updateProperty('${p.id}')">${s.saveChanges}</button>
         <div id="editMsg-${p.id}"></div>
         <div class="link-box">
           <span>${link}</span>
-          <button onclick="copyLink('${link}', this)">Kopieren</button>
+          <button onclick="copyLink('${link}', this)">${s.copy}</button>
         </div>
       </div>
     `;
@@ -208,17 +308,18 @@ function renderPropertyList(){
 }
 
 async function addProperty(){
+  const s = t();
   const name = document.getElementById('newName').value.trim();
   const kb = document.getElementById('newKb').value.trim();
   const msgBox = document.getElementById('addMsg');
-  if (!name) { msgBox.innerHTML = `<div class="msg err">Bitte einen Namen eintragen.</div>`; return; }
+  if (!name) { msgBox.innerHTML = `<div class="msg err">${s.nameRequired}</div>`; return; }
 
   const { error } = await sb.from('properties').insert({
     name, knowledge_base: kb, owner_id: currentUser.id
   });
 
   if (error) {
-    msgBox.innerHTML = `<div class="msg err">Fehler: ${error.message}</div>`;
+    msgBox.innerHTML = `<div class="msg err">${s.error}: ${error.message}</div>`;
   } else {
     await loadProperties();
     renderDashboard();
@@ -226,21 +327,23 @@ async function addProperty(){
 }
 
 async function updateProperty(id){
+  const s = t();
   const kb = document.getElementById(`kb-${id}`).value;
   const msgBox = document.getElementById(`editMsg-${id}`);
   const { error } = await sb.from('properties').update({ knowledge_base: kb }).eq('id', id);
   if (error) {
-    msgBox.innerHTML = `<div class="msg err">Fehler: ${error.message}</div>`;
+    msgBox.innerHTML = `<div class="msg err">${s.error}: ${error.message}</div>`;
   } else {
-    msgBox.innerHTML = `<div class="msg ok">Gespeichert ✓</div>`;
+    msgBox.innerHTML = `<div class="msg ok">${s.saved}</div>`;
     setTimeout(() => { msgBox.innerHTML = ''; }, 2000);
   }
 }
 
 function copyLink(link, btn){
+  const s = t();
   navigator.clipboard.writeText(link);
   const original = btn.textContent;
-  btn.textContent = 'Kopiert ✓';
+  btn.textContent = s.copied;
   setTimeout(() => { btn.textContent = original; }, 1500);
 }
 
@@ -249,8 +352,8 @@ async function logout(){
   renderLogin();
 }
 
-function escapeHtml(s){
-  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
 }
 
 init();
