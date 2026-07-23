@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Host Assistant — The chatbot for your guests</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --paper:#FAF7F2; --panel:#FFFFFF; --ink:#2B2A28; --ink-soft:#6B6862;
+    --forest:#2F4F42; --forest-dark:#1E3A30; --sand:#EFE3CE; --sand-dark:#C9AE7E;
+    --line:#E4DED2;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Inter',sans-serif; color:var(--ink); background:var(--paper); line-height:1.6;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px;}
+  a{color:inherit;}
+
+  nav{display:flex; justify-content:space-between; align-items:center; padding:22px 0;}
+  nav .logo{font-family:'Fraunces',serif; font-weight:700; font-size:19px; color:var(--forest);}
+  nav .cta{background:var(--forest); color:#fff; padding:9px 18px; border-radius:8px; font-size:14px; font-weight:600; text-decoration:none;}
+
+  .hero{padding:70px 0 60px; display:grid; grid-template-columns:1.1fr 1fr; gap:48px; align-items:center;}
+  @media (max-width:760px){.hero{grid-template-columns:1fr;}}
+  .eyebrow{font-size:13px; letter-spacing:.07em; text-transform:uppercase; color:var(--forest); font-weight:600; margin-bottom:14px;}
+  h1{font-family:'Fraunces',serif; font-weight:700; font-size:42px; line-height:1.15; margin-bottom:18px;}
+  .hero p{color:var(--ink-soft); font-size:17px; max-width:440px; margin-bottom:26px;}
+  .btn-primary{display:inline-block; background:var(--forest); color:#fff; padding:13px 26px; border-radius:9px; font-weight:600; font-size:15px; text-decoration:none;}
+  .btn-primary:hover{background:var(--forest-dark);}
+
+  .demo-card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 12px 32px rgba(43,42,40,.06);}
+  .demo-msg{font-size:13.5px; padding:9px 13px; border-radius:12px; margin-bottom:10px; max-width:85%;}
+  .demo-msg.guest{background:var(--sand); margin-left:auto; border-bottom-right-radius:3px;}
+  .demo-msg.bot{background:var(--paper); border:1px solid var(--line); border-bottom-left-radius:3px;}
+
+  .strip{background:var(--forest); color:#fff; padding:16px 0; text-align:center; font-size:14.5px;}
+
+  section.features{padding:70px 0;}
+  .section-head{max-width:520px; margin-bottom:44px;}
+  .section-head .eyebrow{margin-bottom:10px;}
+  .section-head h2{font-family:'Fraunces',serif; font-weight:600; font-size:30px; line-height:1.25;}
+
+  .feature-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  @media (max-width:760px){.feature-grid{grid-template-columns:1fr;}}
+  .feature{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px;}
+  .feature .num{font-family:'Fraunces',serif; font-size:22px; color:var(--sand-dark); margin-bottom:10px;}
+  .feature h3{font-size:16px; font-weight:600; margin-bottom:8px;}
+  .feature p{font-size:14px; color:var(--ink-soft);}
+
+  section.steps{padding:60px 0; border-top:1px solid var(--line);}
+  .step-row{display:flex; gap:18px; padding:20px 0; border-bottom:1px solid var(--line);}
+  .step-row:last-child{border-bottom:none;}
+  .step-num{font-family:'Fraunces',serif; font-size:20px; color:var(--forest); flex-shrink:0; width:34px;}
+  .step-body h4{font-size:15.5px; font-weight:600; margin-bottom:4px;}
+  .step-body p{font-size:14px; color:var(--ink-soft);}
+
+  .pricing{padding:60px 0; text-align:center;}
+  .price-card{display:inline-block; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:34px 44px; margin-top:20px;}
+  .price-card .amount{font-family:'Fraunces',serif; font-size:40px; color:var(--forest);}
+  .price-card .per{color:var(--ink-soft); font-size:14px;}
+
+  footer{padding:36px 0; text-align:center; color:var(--ink-soft); font-size:13px; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <div class="logo">Host Assistant</div>
+    <a class="cta" href="/dashboard.html">Try it free</a>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">For Airbnb & vacation rental hosts</div>
+      <h1>Answers guest questions while you sleep.</h1>
+      <p>A chatbot that automatically explains check-in, WiFi, parking, and house rules — around the clock, without you being glued to your phone.</p>
+      <a class="btn-primary" href="/dashboard.html">Set up your property for free →</a>
+    </div>
+    <div class="demo-card">
+      <div class="demo-msg guest">Hey, how do I get in? I'm already outside 🙂</div>
+      <div class="demo-msg bot">No problem! The lockbox code is right next to the front door — it was sent to you yesterday by message.</div>
+      <div class="demo-msg guest">And WiFi?</div>
+      <div class="demo-msg bot">Network "Wiehre_Guest", password is on the card in the hallway next to the coffee machine.</div>
+    </div>
+  </div>
+</div>
+
+<div class="strip">On average, 70–80% of all guest messages can be answered automatically.</div>
+
+<div class="wrap">
+  <section class="features">
+    <div class="section-head">
+      <div class="eyebrow">Why</div>
+      <h2>Fewer messages for you, faster answers for your guests.</h2>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="num">01</div>
+        <h3>Always available</h3>
+        <p>Even at 11pm or on weekends — the assistant replies instantly, no need to check your phone.</p>
+      </div>
+      <div class="feature">
+        <div class="num">02</div>
+        <h3>Only your info</h3>
+        <p>The bot answers strictly based on what you tell it about your property — nothing is made up.</p>
+      </div>
+      <div class="feature">
+        <div class="num">03</div>
+        <h3>Multiple properties</h3>
+        <p>Each property gets its own knowledge base and its own link — add as many as you like.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps">
+    <div class="section-head">
+      <div class="eyebrow">How it works</div>
+      <h2>Set up in three steps.</h2>
+    </div>
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div class="step-body"><h4>Answer a few questions</h4><p>Check-in process, WiFi, house rules, local tips — one-time, takes about 15 minutes.</p></div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div class="step-body"><h4>Get your link</h4><p>You receive a personal chat link for your property.</p></div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div class="step-body"><h4>Add it to your Airbnb message</h4><p>Add the link to your automated check-in message once — from then on, it all runs by itself.</p></div>
+    </div>
+  </section>
+
+  <section class="pricing" id="contact">
+    <div class="eyebrow">Pricing</div>
+    <div class="price-card">
+      <div class="amount">€25</div>
+      <div class="per">per property / month</div>
+    </div>
+    <p style="margin-top:14px; color:var(--ink-soft); font-size:14px;">From the 3rd property onward, just €15 per additional property / month.</p>
+    <p style="margin-top:12px; color:var(--ink-soft); font-size:14px;">Try your first property free for 30 days — no credit card required.</p>
+  </section>
+</div>
+
+<footer>Host Assistant · A concept project</footer>
+
+</body>
+</html>
